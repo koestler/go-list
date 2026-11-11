@@ -101,6 +101,9 @@ func (l *LList[T]) values() []T {
 // Remove removes e from l if e is an element of list l.
 // It returns the element value e.Value.
 func (l *LList[T]) Remove(e *LElement[T]) T {
+	if e.l != l {
+		return e.Value()
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.List.Remove(e.e)
@@ -123,6 +126,9 @@ func (l *LList[T]) PushBack(v T) *LElement[T] {
 // InsertBefore inserts a new element with value v immediately before mark.
 // If mark is not an element of l, the list is not modified.
 func (l *LList[T]) InsertBefore(v T, mark *LElement[T]) *LElement[T] {
+	if mark.l != l {
+		return nil
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.wrap(l.List.InsertBefore(v, mark.e))
@@ -131,6 +137,9 @@ func (l *LList[T]) InsertBefore(v T, mark *LElement[T]) *LElement[T] {
 // InsertAfter inserts a new element with value v immediately after mark.
 // If mark is not an element of l, the list is not modified.
 func (l *LList[T]) InsertAfter(v T, mark *LElement[T]) *LElement[T] {
+	if mark.l != l {
+		return nil
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.wrap(l.List.InsertAfter(v, mark.e))
@@ -138,6 +147,9 @@ func (l *LList[T]) InsertAfter(v T, mark *LElement[T]) *LElement[T] {
 
 // MoveToFront moves element e to the front of list l.
 func (l *LList[T]) MoveToFront(e *LElement[T]) {
+	if e.l != l {
+		return
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.List.MoveToFront(e.e)
@@ -145,6 +157,9 @@ func (l *LList[T]) MoveToFront(e *LElement[T]) {
 
 // MoveToBack moves element e to the back of list l.
 func (l *LList[T]) MoveToBack(e *LElement[T]) {
+	if e.l != l {
+		return
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.List.MoveToBack(e.e)
@@ -152,6 +167,9 @@ func (l *LList[T]) MoveToBack(e *LElement[T]) {
 
 // MoveBefore moves element e to its new position before mark.
 func (l *LList[T]) MoveBefore(e, mark *LElement[T]) {
+	if e.l != l || mark.l != l {
+		return
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.List.MoveBefore(e.e, mark.e)
@@ -159,6 +177,9 @@ func (l *LList[T]) MoveBefore(e, mark *LElement[T]) {
 
 // MoveAfter moves element e to its new position after mark.
 func (l *LList[T]) MoveAfter(e, mark *LElement[T]) {
+	if e.l != l || mark.l != l {
+		return
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.List.MoveAfter(e.e, mark.e)

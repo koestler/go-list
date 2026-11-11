@@ -298,9 +298,7 @@ func TestLListConcurrent(t *testing.T) {
 	var l LList[int]
 	var wg sync.WaitGroup
 	for i := 0; i < 8; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for j := 0; j < 200; j++ {
 				e := l.PushBack(j)
 				e.Set(j + 1)
@@ -310,10 +308,46 @@ func TestLListConcurrent(t *testing.T) {
 				}
 				l.Remove(e)
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	if l.Len() != 0 {
 		t.Fatalf("len = %d, want 0", l.Len())
+	}
+}
+
+// Test that operations on an element of another list neither modify the
+// lists nor race with concurrent changes to the other list.
+func TestLListForeignElementConcurrent(t *testing.T) {
+	l1, l2 := NewL[int](), NewL[int]()
+	foreign := l2.PushBack(1)
+	l1.PushBack(1)
+
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for i := range 500 {
+			foreign.Set(i)
+			l2.MoveToBack(foreign)
+		}
+	})
+	wg.Go(func() {
+		for range 500 {
+			l1.Remove(foreign)
+			l1.MoveToFront(foreign)
+			l1.MoveToBack(foreign)
+			l1.MoveBefore(foreign, l1.Front())
+			l1.MoveAfter(foreign, l1.Front())
+			if l1.InsertBefore(2, foreign) != nil || l1.InsertAfter(2, foreign) != nil {
+				t.Error("insert with foreign mark must return nil")
+			}
+		}
+	})
+	wg.Wait()
+
+	if n := l1.Len(); n != 1 {
+		t.Errorf("l1.Len() = %d, want 1", n)
+	}
+	if n := l2.Len(); n != 1 {
+		t.Errorf("l2.Len() = %d, want 1", n)
 	}
 }
