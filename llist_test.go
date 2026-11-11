@@ -10,7 +10,7 @@ func checkLListPointers[T any](t *testing.T, l *LList[T], es []*LElement[T]) {
 	for i, e := range es {
 		raw[i] = e.e
 	}
-	checkListPointers(t, &l.List, raw)
+	checkListPointers(t, &l.list, raw)
 }
 
 func TestLList(t *testing.T) {
@@ -95,7 +95,7 @@ func TestLList(t *testing.T) {
 }
 
 func checkLList(t *testing.T, l *LList[any], es []any) {
-	if !checkListLen(t, &l.List, len(es)) {
+	if !checkListLen(t, &l.list, len(es)) {
 		return
 	}
 

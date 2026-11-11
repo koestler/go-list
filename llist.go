@@ -44,15 +44,15 @@ func (c *LElement[T]) Set(v T) {
 //
 // Elements are exposed as *LElement, whose methods use the list's lock.
 type LList[T any] struct {
-	List[T]
-	mu sync.RWMutex
+	list List[T]
+	mu   sync.RWMutex
 }
 
 // Init initializes or clears list l.
 func (l *LList[T]) Init() *LList[T] {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.List.Init()
+	l.list.Init()
 	return l
 }
 
@@ -63,21 +63,21 @@ func NewL[T any]() *LList[T] { return new(LList[T]).Init() }
 func (l *LList[T]) Len() int {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	return l.List.Len()
+	return l.list.Len()
 }
 
 // Front returns the first element of list l or nil if the list is empty.
 func (l *LList[T]) Front() *LElement[T] {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	return l.wrap(l.List.Front())
+	return l.wrap(l.list.Front())
 }
 
 // Back returns the last element of list l or nil if the list is empty.
 func (l *LList[T]) Back() *LElement[T] {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	return l.wrap(l.List.Back())
+	return l.wrap(l.list.Back())
 }
 
 func (l *LList[T]) wrap(e *Element[T]) *LElement[T] {
@@ -91,8 +91,8 @@ func (l *LList[T]) wrap(e *Element[T]) *LElement[T] {
 func (l *LList[T]) values() []T {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	vs := make([]T, 0, l.List.Len())
-	for e := l.List.Front(); e != nil; e = e.Next() {
+	vs := make([]T, 0, l.list.Len())
+	for e := l.list.Front(); e != nil; e = e.Next() {
 		vs = append(vs, e.Value)
 	}
 	return vs
@@ -106,21 +106,21 @@ func (l *LList[T]) Remove(e *LElement[T]) T {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.List.Remove(e.e)
+	return l.list.Remove(e.e)
 }
 
 // PushFront inserts a new element with value v at the front of list l.
 func (l *LList[T]) PushFront(v T) *LElement[T] {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.wrap(l.List.PushFront(v))
+	return l.wrap(l.list.PushFront(v))
 }
 
 // PushBack inserts a new element with value v at the back of list l.
 func (l *LList[T]) PushBack(v T) *LElement[T] {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.wrap(l.List.PushBack(v))
+	return l.wrap(l.list.PushBack(v))
 }
 
 // InsertBefore inserts a new element with value v immediately before mark.
@@ -131,7 +131,7 @@ func (l *LList[T]) InsertBefore(v T, mark *LElement[T]) *LElement[T] {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.wrap(l.List.InsertBefore(v, mark.e))
+	return l.wrap(l.list.InsertBefore(v, mark.e))
 }
 
 // InsertAfter inserts a new element with value v immediately after mark.
@@ -142,7 +142,7 @@ func (l *LList[T]) InsertAfter(v T, mark *LElement[T]) *LElement[T] {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	return l.wrap(l.List.InsertAfter(v, mark.e))
+	return l.wrap(l.list.InsertAfter(v, mark.e))
 }
 
 // MoveToFront moves element e to the front of list l.
@@ -152,7 +152,7 @@ func (l *LList[T]) MoveToFront(e *LElement[T]) {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.List.MoveToFront(e.e)
+	l.list.MoveToFront(e.e)
 }
 
 // MoveToBack moves element e to the back of list l.
@@ -162,7 +162,7 @@ func (l *LList[T]) MoveToBack(e *LElement[T]) {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.List.MoveToBack(e.e)
+	l.list.MoveToBack(e.e)
 }
 
 // MoveBefore moves element e to its new position before mark.
@@ -172,7 +172,7 @@ func (l *LList[T]) MoveBefore(e, mark *LElement[T]) {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.List.MoveBefore(e.e, mark.e)
+	l.list.MoveBefore(e.e, mark.e)
 }
 
 // MoveAfter moves element e to its new position after mark.
@@ -182,7 +182,7 @@ func (l *LList[T]) MoveAfter(e, mark *LElement[T]) {
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	l.List.MoveAfter(e.e, mark.e)
+	l.list.MoveAfter(e.e, mark.e)
 }
 
 // PushBackList inserts a copy of another list at the back of list l.
@@ -193,7 +193,7 @@ func (l *LList[T]) PushBackList(other *LList[T]) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for _, v := range vs {
-		l.List.PushBack(v)
+		l.list.PushBack(v)
 	}
 }
 
@@ -205,6 +205,6 @@ func (l *LList[T]) PushFrontList(other *LList[T]) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for i := len(vs) - 1; i >= 0; i-- {
-		l.List.PushFront(vs[i])
+		l.list.PushFront(vs[i])
 	}
 }
