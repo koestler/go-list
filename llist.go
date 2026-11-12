@@ -5,6 +5,10 @@ import "sync"
 // LElement is an element of a LList. All its methods are safe for concurrent
 // use. Each LList method returns a new LElement wrapper, so compare elements
 // by their values rather than by pointer.
+//
+// A zero LElement does not belong to any list: Next and Prev return nil,
+// while Value and Set work without locking. Like a zero Element, a zero
+// LElement is therefore not safe for concurrent use.
 type LElement[T any] struct {
 	e *Element[T]
 	l *LList[T]
@@ -12,6 +16,9 @@ type LElement[T any] struct {
 
 // Next returns the next list element or nil.
 func (c *LElement[T]) Next() *LElement[T] {
+	if c.l == nil {
+		return nil
+	}
 	c.l.mu.RLock()
 	defer c.l.mu.RUnlock()
 	return c.l.wrap(c.e.Next())
@@ -19,6 +26,9 @@ func (c *LElement[T]) Next() *LElement[T] {
 
 // Prev returns the previous list element or nil.
 func (c *LElement[T]) Prev() *LElement[T] {
+	if c.l == nil {
+		return nil
+	}
 	c.l.mu.RLock()
 	defer c.l.mu.RUnlock()
 	return c.l.wrap(c.e.Prev())
@@ -26,6 +36,9 @@ func (c *LElement[T]) Prev() *LElement[T] {
 
 // Value returns the value stored with the element.
 func (c *LElement[T]) Value() T {
+	if c.l == nil {
+		return c.unlockedValue()
+	}
 	c.l.mu.RLock()
 	defer c.l.mu.RUnlock()
 	return c.e.Value
@@ -33,8 +46,29 @@ func (c *LElement[T]) Value() T {
 
 // Set replaces the value stored with the element.
 func (c *LElement[T]) Set(v T) {
+	if c.l == nil {
+		c.unlockedSet(v)
+		return
+	}
 	c.l.mu.Lock()
 	defer c.l.mu.Unlock()
+	c.e.Value = v
+}
+
+// unlockedValue returns the value of a zero LElement, which has no list to lock.
+func (c *LElement[T]) unlockedValue() T {
+	if c.e == nil {
+		var zero T
+		return zero
+	}
+	return c.e.Value
+}
+
+// unlockedSet sets the value of a zero LElement, which has no list to lock.
+func (c *LElement[T]) unlockedSet(v T) {
+	if c.e == nil {
+		c.e = new(Element[T])
+	}
 	c.e.Value = v
 }
 

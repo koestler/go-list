@@ -254,6 +254,36 @@ func TestLInitDetachesElements(t *testing.T) {
 	}
 }
 
+// Test that a zero LElement behaves like a zero Element and does not panic.
+func TestLZeroElement(t *testing.T) {
+	l := NewL[any]()
+	l.PushBack(1)
+
+	var e LElement[any]
+	if v := l.Remove(&e); v != nil {
+		t.Errorf("Remove(zero) = %v, want nil", v)
+	}
+	if e.Next() != nil || e.Prev() != nil {
+		t.Error("zero element must not have neighbours")
+	}
+	e.Set(5)
+	if v := e.Value(); v != 5 {
+		t.Errorf("zero element Value() = %v, want 5", v)
+	}
+	if v := l.Remove(&e); v != 5 {
+		t.Errorf("Remove(zero) = %v, want 5", v)
+	}
+	if e.Next() != nil || e.Prev() != nil {
+		t.Error("zero element must not have neighbours after Set")
+	}
+	l.MoveToFront(&e)
+	l.MoveAfter(&e, l.Front())
+	if l.InsertBefore(2, &e) != nil {
+		t.Error("InsertBefore with zero mark must return nil")
+	}
+	checkLList(t, l, []any{1})
+}
+
 // Test PushFront, PushBack, PushFrontList, PushBackList with uninitialized List
 func TestLZeroList(t *testing.T) {
 	var l1 = new(LList[any])
