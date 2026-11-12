@@ -2,7 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package list provides a doubly linked list implementation using generics.
+// Package list provides generic doubly linked lists.
+//
+// List is a generic version of container/list and is not safe for concurrent use.
+// LList wraps a List with a sync.RWMutex and is safe for concurrent use.
 package list
 
 // Element is an element of a linked list.

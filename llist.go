@@ -3,8 +3,9 @@ package list
 import "sync"
 
 // LElement is an element of a LList. All its methods are safe for concurrent
-// use. Each LList method returns a new LElement wrapper, so compare elements
-// by their values rather than by pointer.
+// use. Each LList method returns a new LElement wrapper, so two pointers to
+// the same element may differ: compare the wrappers themselves (*a == *b)
+// rather than the pointers (a == b).
 //
 // A zero LElement does not belong to any list: Next and Prev return nil,
 // while Value and Set work without locking. Like a zero Element, a zero
@@ -87,6 +88,8 @@ type LList[T any] struct {
 }
 
 // Init initializes or clears list l.
+// Elements previously in l are detached and no longer belong to l.
+// The complexity is O(n) in the number of removed elements.
 func (l *LList[T]) Init() *LList[T] {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -137,7 +140,8 @@ func (l *LList[T]) values() []T {
 }
 
 // Remove removes e from l if e is an element of list l.
-// It returns the element value e.Value.
+// It returns the element value e.Value().
+// The element must not be nil.
 func (l *LList[T]) Remove(e *LElement[T]) T {
 	if e.l != l {
 		return e.Value()
@@ -161,8 +165,9 @@ func (l *LList[T]) PushBack(v T) *LElement[T] {
 	return l.wrap(l.list.PushBack(v))
 }
 
-// InsertBefore inserts a new element with value v immediately before mark.
-// If mark is not an element of l, the list is not modified.
+// InsertBefore inserts a new element with value v immediately before mark and returns it.
+// If mark is not an element of l, the list is not modified and nil is returned.
+// The mark must not be nil.
 func (l *LList[T]) InsertBefore(v T, mark *LElement[T]) *LElement[T] {
 	if mark.l != l {
 		return nil
@@ -172,8 +177,9 @@ func (l *LList[T]) InsertBefore(v T, mark *LElement[T]) *LElement[T] {
 	return l.wrap(l.list.InsertBefore(v, mark.e))
 }
 
-// InsertAfter inserts a new element with value v immediately after mark.
-// If mark is not an element of l, the list is not modified.
+// InsertAfter inserts a new element with value v immediately after mark and returns it.
+// If mark is not an element of l, the list is not modified and nil is returned.
+// The mark must not be nil.
 func (l *LList[T]) InsertAfter(v T, mark *LElement[T]) *LElement[T] {
 	if mark.l != l {
 		return nil
@@ -184,6 +190,8 @@ func (l *LList[T]) InsertAfter(v T, mark *LElement[T]) *LElement[T] {
 }
 
 // MoveToFront moves element e to the front of list l.
+// If e is not an element of l, the list is not modified.
+// The element must not be nil.
 func (l *LList[T]) MoveToFront(e *LElement[T]) {
 	if e.l != l {
 		return
@@ -194,6 +202,8 @@ func (l *LList[T]) MoveToFront(e *LElement[T]) {
 }
 
 // MoveToBack moves element e to the back of list l.
+// If e is not an element of l, the list is not modified.
+// The element must not be nil.
 func (l *LList[T]) MoveToBack(e *LElement[T]) {
 	if e.l != l {
 		return
@@ -204,6 +214,8 @@ func (l *LList[T]) MoveToBack(e *LElement[T]) {
 }
 
 // MoveBefore moves element e to its new position before mark.
+// If e or mark is not an element of l, or e == mark, the list is not modified.
+// The element and mark must not be nil.
 func (l *LList[T]) MoveBefore(e, mark *LElement[T]) {
 	if e.l != l || mark.l != l {
 		return
@@ -214,6 +226,8 @@ func (l *LList[T]) MoveBefore(e, mark *LElement[T]) {
 }
 
 // MoveAfter moves element e to its new position after mark.
+// If e or mark is not an element of l, or e == mark, the list is not modified.
+// The element and mark must not be nil.
 func (l *LList[T]) MoveAfter(e, mark *LElement[T]) {
 	if e.l != l || mark.l != l {
 		return
@@ -225,7 +239,7 @@ func (l *LList[T]) MoveAfter(e, mark *LElement[T]) {
 
 // PushBackList inserts a copy of another list at the back of list l.
 // The other list is snapshotted first, so the two locks are never held
-// at the same time and l and other may be the same list.
+// at the same time and l and other may be the same list. They must not be nil.
 func (l *LList[T]) PushBackList(other *LList[T]) {
 	vs := other.values()
 	l.mu.Lock()
@@ -237,7 +251,7 @@ func (l *LList[T]) PushBackList(other *LList[T]) {
 
 // PushFrontList inserts a copy of another list at the front of list l.
 // The other list is snapshotted first, so the two locks are never held
-// at the same time and l and other may be the same list.
+// at the same time and l and other may be the same list. They must not be nil.
 func (l *LList[T]) PushFrontList(other *LList[T]) {
 	vs := other.values()
 	l.mu.Lock()

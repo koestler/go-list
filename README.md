@@ -49,7 +49,9 @@ for e := l.Front(); e != nil; e = e.Next() {
 ```
 
 Notes:
-* Each `LList` method returns a new `*LElement` wrapper, so compare elements by value, not by pointer.
+* Each `LList` method returns a new `*LElement` wrapper, so two pointers to the same element may differ. Compare the
+  wrappers (`*a == *b`), not the pointers (`a == b`). 
+  hold equal values.
 * Passing an element that belongs to another list is a no-op, as with `List`.
 * `PushBackList` and `PushFrontList` copy a snapshot of the other list; the list is not locked as a whole across
   multiple calls.
