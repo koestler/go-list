@@ -52,4 +52,7 @@ Notes:
 * Each `LList` method returns a new `*LElement` wrapper, so compare elements by value, not by pointer.
 * Passing an element that belongs to another list is a no-op, as with `List`.
 * `PushBackList` and `PushFrontList` copy a snapshot of the other list; the list is not locked as a whole across
-  multiple calls. Iterating with `Next` is safe but not atomic: other goroutines may modify the list in between.
+  multiple calls.
+* Iterating with `Next` or `Prev` is free of data races but not atomic: each step takes the lock separately, so other
+  goroutines may modify the list in between. If the current element is removed concurrently, `Next` and `Prev`
+  return `nil` and the loop ends early. If elements are moved concurrently, the loop may skip or repeat elements.

@@ -15,6 +15,8 @@ type LElement[T any] struct {
 }
 
 // Next returns the next list element or nil.
+// It returns nil as well if c has been removed from its list, so a loop
+// over Next ends early when another goroutine removes the current element.
 func (c *LElement[T]) Next() *LElement[T] {
 	if c.l == nil {
 		return nil
@@ -25,6 +27,8 @@ func (c *LElement[T]) Next() *LElement[T] {
 }
 
 // Prev returns the previous list element or nil.
+// It returns nil as well if c has been removed from its list, so a loop
+// over Prev ends early when another goroutine removes the current element.
 func (c *LElement[T]) Prev() *LElement[T] {
 	if c.l == nil {
 		return nil
