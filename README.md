@@ -12,6 +12,7 @@ It provides two implementations:
 ## List
 
 `List[T]` is a drop-in generic version of `container/list.List`. The zero value is an empty list ready to use.
+Unlike `container/list`, `Init` detaches all existing elements (O(n)), so stale elements can no longer corrupt the list.
 
 ```go
 l := list.New[string]()

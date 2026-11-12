@@ -285,6 +285,38 @@ func TestMove(t *testing.T) {
 	checkListPointers(t, l, []*Element[any]{e1, e3, e2, e4})
 }
 
+// Test that elements of a list are detached by Init and no longer affect it.
+func TestInitDetachesElements(t *testing.T) {
+	l := New[any]()
+	old1 := l.PushBack(1)
+	old2 := l.PushBack(2)
+	l.Init()
+	checkListPointers(t, l, []*Element[any]{})
+
+	e3 := l.PushBack(3)
+	l.Remove(old1)
+	l.MoveToFront(old2)
+	l.MoveAfter(old2, e3)
+	if l.InsertBefore(4, old2) != nil {
+		t.Error("InsertBefore with detached mark must return nil")
+	}
+	checkListPointers(t, l, []*Element[any]{e3})
+
+	if old1.Next() != nil || old1.Prev() != nil || old2.Next() != nil || old2.Prev() != nil {
+		t.Error("detached elements must not have neighbours")
+	}
+}
+
+// Test that Init on a by-value copy of a list does not modify the original.
+func TestInitCopy(t *testing.T) {
+	l := New[any]()
+	e1 := l.PushBack(1)
+	e2 := l.PushBack(2)
+	c := *l
+	c.Init()
+	checkListPointers(t, l, []*Element[any]{e1, e2})
+}
+
 // Test PushFront, PushBack, PushFrontList, PushBackList with uninitialized List
 func TestZeroList(t *testing.T) {
 	var l1 = new(List[any])

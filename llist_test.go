@@ -238,6 +238,22 @@ func TestLMove(t *testing.T) {
 	checkLListPointers(t, l, []*LElement[any]{e1, e3, e2, e4})
 }
 
+// Test that elements of a list are detached by Init and no longer affect it.
+func TestLInitDetachesElements(t *testing.T) {
+	l := NewL[any]()
+	old := l.PushBack(1)
+	l.PushBack(2)
+	l.Init()
+
+	e3 := l.PushBack(3)
+	l.Remove(old)
+	l.MoveToFront(old)
+	checkLListPointers(t, l, []*LElement[any]{e3})
+	if old.Next() != nil || old.Prev() != nil {
+		t.Error("detached element must not have neighbours")
+	}
+}
+
 // Test PushFront, PushBack, PushFrontList, PushBackList with uninitialized List
 func TestLZeroList(t *testing.T) {
 	var l1 = new(LList[any])

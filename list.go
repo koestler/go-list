@@ -41,7 +41,16 @@ type List[T any] struct {
 }
 
 // Init initializes or clears list l.
+// Elements previously in l are detached and no longer belong to l.
+// The complexity is O(n) in the number of removed elements.
 func (l *List[T]) Init() *List[T] {
+	// The sentinel's list field is nil, so the loop stops at the root.
+	// It also leaves elements alone when l is a by-value copy of another list.
+	for e := l.root.next; e != nil && e.list == l; {
+		next := e.next
+		e.next, e.prev, e.list = nil, nil, nil
+		e = next
+	}
 	l.root.next = &l.root
 	l.root.prev = &l.root
 	l.len = 0
